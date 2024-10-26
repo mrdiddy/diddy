@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>edaddy application</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Fredoka One', sans-serif;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #111;
+            color: white;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            margin: auto;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s;
+        }
+
+        h1 {
+            text-align: center;
+            color: #FFA500;
+            margin-bottom: 20px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin: 10px 0 5px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            border: 1px solid #FFA500;
+            border-radius: 5px;
+            background: #222;
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .dropdown {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .dropdown-label {
+            padding: 12px;
+            border: 1px solid #FFA500;
+            border-radius: 10px;
+            background: #222;
+            color: white;
+            cursor: pointer;
+            user-select: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .dropdown-options {
+            display: none;
+            position: absolute;
+            background: #222;
+            border: 1px solid #FFA500;
+            border-radius: 10px;
+            width: 100%;
+            z-index: 10;
+        }
+
+        .dropdown-option {
+            padding: 12px;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .dropdown-option:hover {
+            background: #FFA500;
+        }
+
+        button {
+            padding: 12px;
+            background-color: #FFA500;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #FF8C00;
+        }
+
+        .notification {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            background-color: #FFA500;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+            z-index: 1000;
+            transition: opacity 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>edaddy application</h1>
+        <form id="applicationForm" action="javascript:void(0);">
+            <label for="username">discord username</label>
+            <input type="text" id="username" placeholder="e.g., ultraskibidiradiation" required>
+
+            <label for="nitro">will you give me nitro?</label>
+            <div class="dropdown">
+                <div class="dropdown-label" id="dropdownLabel" tabindex="0" aria-haspopup="listbox" aria-expanded="false">select your answer</div>
+                <div class="dropdown-options" id="dropdownOptions" role="listbox">
+                    <div class="dropdown-option" role="option" data-value="yes">yes</div>
+                    <div class="dropdown-option" role="option" data-value="yeah">yeah</div>
+                </div>
+            </div>
+
+            <button type="submit">submit application</button>
+        </form>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <script>
+        const webhookURL = "https://discord.com/api/webhooks/1299672474044338196/-E9mTkz8bSD6yFMcFhwnkoMR_JmFF32hnbe-u0OxbGSv8J0gKwba4AF31qOMYS_kyS8D";
+        const dropdownLabel = document.getElementById('dropdownLabel');
+        const dropdownOptions = document.getElementById('dropdownOptions');
+        const applicationForm = document.getElementById('applicationForm');
+        const notification = document.getElementById('notification');
+
+        let isCooldown = false;
+        let cooldownTime = 30;
+
+        dropdownLabel.addEventListener('click', () => {
+            dropdownOptions.style.display = dropdownOptions.style.display === 'block' ? 'none' : 'block';
+            dropdownLabel.setAttribute('aria-expanded', dropdownOptions.style.display === 'block');
+        });
+
+        document.querySelectorAll('.dropdown-option').forEach(option => {
+            option.addEventListener('click', () => {
+                dropdownLabel.textContent = option.textContent;
+                dropdownOptions.style.display = 'none';
+                dropdownLabel.setAttribute('aria-expanded', 'false');
+            });
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!dropdownLabel.contains(event.target) && !dropdownOptions.contains(event.target)) {
+                dropdownOptions.style.display = 'none';
+                dropdownLabel.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        applicationForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            if (isCooldown) {
+                notification.textContent = `you already submitted! please wait ${cooldownTime} seconds.`;
+                notification.style.display = 'block';
+                notification.style.backgroundColor = '#FF0000';
+                return;
+            }
+
+            const selectedOption = dropdownLabel.textContent;
+            const username = document.getElementById('username').value;
+
+            notification.textContent = "application submitted successfully!";
+            notification.style.display = 'block';
+            notification.style.backgroundColor = '#FFA500';
+            applicationForm.reset();
+            isCooldown = true;
+
+            fetch(webhookURL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    embeds: [{
+                        title: "new edaddy Application",
+                        color: 16753920,
+                        fields: [
+                            { name: "discord username", value: username, inline: true },
+                            { name: "nitro response", value: selectedOption, inline: true }
+                        ],
+                        footer: { text: "boyfriend application log" }
+                    }]
+                })
+            }).catch(error => console.error('error sending to discord webhook:', error));
+
+            const countdown = setInterval(() => {
+                cooldownTime--;
+                notification.textContent = `you already submitted! please wait ${cooldownTime} seconds.`;
+
+                if (cooldownTime <= 0) {
+                    clearInterval(countdown);
+                    isCooldown = false;
+                    cooldownTime = 30;
+                    notification.style.display = 'none';
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
